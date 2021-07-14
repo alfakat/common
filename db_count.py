@@ -1,9 +1,11 @@
 import pymysql
 import sys
+import os
+import platform
 
+#crossplatform - add for Windows
 conn = pymysql.connect(host='mysql-new.home.jungo.com', port=3306, user='videouser', passwd='videouser', db='videodb')
 cur = conn.cursor()
-
 
 def select(query, ):
     cur = conn.cursor()
@@ -14,11 +16,11 @@ def select(query, ):
         # x = x[:-1]  # delete last ','
         print(x)
 
-
 def synthetic():
     cur = conn.cursor()
-    cur.execute("select CollectionID from collections where Origin='SYNTHETIC'") #group by CollectionID")
+    cur.execute("select CollectionID from collections where Origin='SYNTHETIC' group by CollectionID")
 
+#rewrite!
     synthetic_col_nums = cur.fetchall()
     synthetic_col_nums_edited = str(synthetic_col_nums).replace('(', '').replace(',)', '').replace(')', '')
     print(synthetic_col_nums_edited)
@@ -29,6 +31,8 @@ def synthetic():
 if __name__ == '__main__':
     synthetic()
 
+#prints
+
 confidence = ('HIGH', 'MEDIUM', 'INVALID', 'NONE')
 object_type = (
 'face', 'hand', 'cigarette', 'cup', 'bottle', 'chair', 'book', 'laptop', 'cell phone', 'tie', 'bus', 'car', 'person',
@@ -38,9 +42,42 @@ landmarks = ('Landmarks', 'Eye landmarks Left', 'Eye landmarks Right', 'Mouth la
 head_pose = ('Head Pose Yaw', 'Head Pose Pitch', 'Head Pose Roll')
 eyes = ('Eyes state', 'Eyes gaze', 'Eyes gaze lid', 'Eyes Iris Marks', 'Eyes wear')
 
-sys.stdout = open("/home/katerynad/Desktop/test.txt", "w")  # add by OS
+# creating file with results
+#match to the file
 
-'''
+home_linux = os.getenv('HOME')
+home_windows = os.path.expandvars("%userprofile%")
+results_file_linux = os.path.join(home_linux, 'Desktop', 'db_count_results.txt')
+results_file_windows = os.path.join(home_windows, '', 'Desktop', '', 'db_count_results.txt')
+
+def saving_results():
+    saving_results
+    current_os = platform.system().lower()
+
+    if current_os.lower() == "windows":
+        db_count_reults = open("%s" % results_file_windows, "w")
+        sys.stdout = db_count_reults
+        db_count_reults.close
+        if os.path.exists(results_file_windows):
+            print('File already exists and will be overwrite')
+        elif os.path.exists(results_file_windows) == False:
+           print("File created")
+           
+    elif current_os.lower() == "linux":
+        db_count_reults = open("%s" % results_file_linux, "w")
+        sys.stdout = db_count_reults
+        db_count_reults.close
+        if os.path.exists(results_file_linux):
+            print('File already exists and will be overwrite')
+        elif os.path.exists(results_file_linux) == False:
+           print("File created")
+
+if __name__ == '__main__':
+    saving_results()
+
+#sys.stdout = open("/home/katerynad/Desktop/test.txt", "w")  # add by OS
+
+
 #Eye Alignment (landmarks) – pinpoint interest points on the eyes. Output is provided as a vector of 53 points.  
 #SELECT count(*) FROM videodb.objects where EyeLandmarksL is not NULL;
 
@@ -49,6 +86,14 @@ sys.stdout = open("/home/katerynad/Desktop/test.txt", "w")  # add by OS
 print('ObjectType:', object_type[0], 'ObjectRectConf:', confidence[0])
 select("select count(*) from videodb.main_view where ObjectRectConfidence = 'HIGH' and ObjectType = 'face'")
 
+sys.stdout.close()
+cur.close()
+conn.close()
+
+
+#select("select count(*) from videodb.main_view where ObjectRectConfidence=", confidence [0], "and ObjectType =", object_type[0])
+
+'''
 # Face rect MEDIUM
 print('ObjectType:', object_type[0], 'ObjectRectConf:', confidence[1])
 select("select count(*) from videodb.main_view where ObjectRectConfidence = 'MEDIUM' and ObjectType = 'face'")
@@ -95,13 +140,11 @@ select("select count(*) from videodb.main_view where LandmarksConfidence = 'NONE
 
 # Face landmarks synthetic HIGH
 print('Face', landmarks[4], 'Confidence:', confidence[0])
-select(
-    "select count(*) from videodb.main_view where LandmarksConfidence = 'HIGH' and CollectionID in (select CollectionID from collections where Origin='SYNTHETIC' group by CollectionID)")
+select("select count(*) from videodb.main_view where LandmarksConfidence = 'HIGH' and CollectionID in (select CollectionID from collections where Origin='SYNTHETIC' group by CollectionID)")
 
 # Face landmarks synthetic MEDIUM
 print('Face', landmarks[4], 'Confidence:', confidence[1])
-select(
-    "select count(*) from videodb.main_view where LandmarksConfidence = 'MEDIUM' and CollectionID in (select CollectionID from collections where Origin='SYNTHETIC' group by CollectionID)")
+select("select count(*) from videodb.main_view where LandmarksConfidence = 'MEDIUM' and CollectionID in (select CollectionID from collections where Origin='SYNTHETIC' group by CollectionID)")
 
 # Face landmarks synthetic INVALID
 print('Face', landmarks[4], 'Confidence:', confidence[2])
@@ -464,8 +507,6 @@ select("select count(*) from videodb.main_view where IrisMarksConfidence = 'HIGH
 print(eyes[3], 'Confidence:', confidence[1])
 select("select count(*) from videodb.main_view where IrisMarksConfidence = ' MEDIUM'")
 
-
-
 # Eyes iris marks INVALID
 print(eyes[3], 'Confidence:', confidence[2])
 select("select count(*) from videodb.main_view where IrisMarksConfidence = 'INVALID'")
@@ -716,7 +757,6 @@ select("select count(*) from videodb.main_view where ObjectRectConfidence = 'HIG
 print('ObjectType:', object_type[8], 'ObjectRectConf:', confidence[1])
 select("select count(*) from videodb.main_view where ObjectRectConfidence = 'MEDIUM' and ObjectType = 'cell phone'")
 
-'''
 # Cell phone INVALID
 print('ObjectType:', object_type[8], 'ObjectRectConf:', confidence[2])
 select("select count(*) from videodb.main_view where ObjectRectConfidence = 'INVALID' and ObjectType = 'cell phone'")
@@ -805,6 +845,6 @@ select("select count(*) from videodb.main_view where ObjectRectConfidence = 'INV
 print('ObjectType:', object_type[13], 'ObjectRectConf:', confidence[3])
 select("select count(*) from videodb.main_view where ObjectRectConfidence = 'NONE' and ObjectType = 'head top'")
 
-sys.stdout.close()
-cur.close()
-conn.close()
+'''
+
+
